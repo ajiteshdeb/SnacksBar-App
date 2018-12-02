@@ -1,0 +1,34 @@
+[
+    {
+      "id": 1,
+      "name": "Birthday Cake",
+      "prize": 20,
+      "imgLocation": "./img/birthdaycake.png"
+    },
+    {
+      "id": 2,
+      "name": "Fries",
+      "prize": 30,
+      "imgLocation": "./img/fries.png"
+    },
+    {
+      "id": 3,
+      "name": "hotdog",
+      "prize": 40,
+      "imgLocation": "./img/hotdog.png"
+      
+    },
+    {
+      "id": 4,
+      "name": "Pancakes",
+      "prize": 50,
+      "imgLocation": "./img/pancakes.png"
+    },
+    {
+      "id": 5,
+      "name": "Pizza",
+      "prize": 60,
+      "imgLocation": "./img/pizza.png"
+    }   
+    
+  ]

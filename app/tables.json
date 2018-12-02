@@ -1,0 +1,27 @@
+[
+    {
+      "id": 1,
+      "name": "Silver Table"
+    },
+    {
+      "id": 2,
+      "name": "Cafeteria table"
+    },
+    {
+      "id": 3,
+      "name": "Buffet Table"
+    },
+    {
+      "id": 4,
+      "name": "Counter Table"
+    },
+    {
+      "id": 5,
+      "name": "American Table"
+    },
+    {
+      "id": 6,
+      "name": "Grilled table"
+    }    
+    
+  ]

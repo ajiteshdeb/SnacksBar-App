@@ -36,6 +36,17 @@ export class App {
         tablePointer.classList.add('active');
         this.tableSelected = true;
         document.getElementById("tableNumber").children[0].textContent = selectedTable
+
+        this.setState( {  tables: [ ...this.state.tables] ,foods: [ ...this.state.foods],
+            foodcart: [], CartPrize: 0})
+        let tableOrder = "tableOrder-"+selectedTable
+        if (localStorage.getItem(tableOrder) !== null) {
+            let storedfoodcart = JSON.parse(localStorage.getItem(tableOrder));
+            let storedCartPrize = storedfoodcart.map(item => item.prize).reduce((a, b) => a + b, 0);
+            this.setState( {  tables: [ ...this.state.tables] ,foods: [ ...this.state.foods],
+                foodcart: [ ...this.state.foodcart, ...storedfoodcart ], CartPrize: storedCartPrize})
+        }
+
     }
     
     addFood(foodID){
@@ -43,13 +54,17 @@ export class App {
             alert("Select a table first!!");
             return;
         }
+        let tableNo = document.getElementById("tableNumber").children[0].textContent
+        let tableOrder = "tableOrder-"+tableNo
         let fooditem = {
-         id: +new Date()
+         id: +new Date(),
         }
         fooditem.name = this.state.foods.find(obj => obj.id == foodID).name;
         fooditem.prize = this.state.foods.find(obj => obj.id == foodID).prize;
         this.setState( {  tables: [ ...this.state.tables] ,foods: [ ...this.state.foods],
              foodcart: [ ...this.state.foodcart, fooditem ], CartPrize: app.setTotalPrize(fooditem.prize)})
+
+        localStorage.setItem(tableOrder, JSON.stringify(this.state.foodcart));     
     }
 
     setTotalPrize(totalprize){
@@ -60,7 +75,13 @@ export class App {
     deleteFoodFromList(idToDelete){
         let newfoodCartPrize =  this.state.CartPrize - this.state.foodcart.find(obj => obj.id == idToDelete).prize;
         let newfoodCart = this.state.foodcart.filter( e => e.id !== parseInt(idToDelete))
+
+        
         this.setState({ tables: [ ...this.state.tables] ,foods: [ ...this.state.foods ], foodcart: [...newfoodCart], CartPrize: newfoodCartPrize })
+        let tableOrder = "tableOrder-"+document.getElementById("tableNumber").children[0].textContent
+        if (localStorage.getItem(tableOrder) !== null) {
+            localStorage.setItem(tableOrder, JSON.stringify(this.state.foodcart)); 
+        }
     }
 
     refresh(){
@@ -68,11 +89,17 @@ export class App {
             document.getElementById("table").children[1].innerHTML = TablesList(this.state.tables)
         }
         document.getElementById("menu").children[0].innerHTML = FoodList(this.state.foods)
-        document.getElementById("selected-food").innerHTML = FoodCartList(this.state.foodcart)
+        document.getElementById("details").children[2].innerHTML = FoodCartList(this.state.foodcart)
         document.getElementById("total").children[0].children[0].innerHTML = '$'+this.state.CartPrize
     }    
 
     render() {
+        // let storedfoodcart = JSON.parse(localStorage.getItem("foodcart"));
+        // console.log(storedfoodcart);
+        // if(storedfoodcart.length > 0){
+        //     this.state.foodcart = storedfoodcart;
+        //     console.log(this.state.foodcart);
+        // }
         this.rootElement.innerHTML = `
 		<h1>SnacksBar App</h1>
 		<hr>
@@ -80,7 +107,7 @@ export class App {
 			<div class="span4">
 				<div id="table" class="clearfix">
                     <h2 id="tableHeading">Tables</h2>
-                    <ul class="allTables"> ${TablesList(this.state.tables)} </ul>
+                     ${TablesList(this.state.tables)} 
 					
 				</div>
 			</div>
@@ -92,9 +119,9 @@ export class App {
 					<div class="span2">
 						<div id="menu">
 							
-                        <ul>
+                        
                             ${FoodList(this.state.foods)}
-                        </ul>
+                        
 								
 						</div>						
 					</div>
@@ -106,8 +133,11 @@ export class App {
 									<h3>Click a food to add it</h3>
 								</li>
 							</ul>
-							<ul id="selected-food"></ul>
-                            ${FoodCartList(this.state.foodcart)}							
+                            
+                            <div>
+                            ${FoodCartList(this.state.foodcart)}	
+                            </div>
+
 							<ul>
 								<li id="total">
 									<h3>Total <span>${this.state.CartPrize}</span></h3>

@@ -1,4 +1,3 @@
-
 import { TablesList } from './TablesList.js'
 import { FoodList } from './FoodList.js'
 import { FoodCartList } from './FoodCartList.js'
@@ -10,9 +9,10 @@ export class App {
        tables: [],
        foods: [],
        foodcart: [],
-       CartPrize: 0
+       CartPrize: 0,
       }
-      this.tableSelected = false
+      this.tableSelected = false,
+      this.lastActiveTable = 1
     }
 
     setState(state){
@@ -26,6 +26,25 @@ export class App {
         let fooddata = await fetch('./app/foods.json')
         let foods = await fooddata.json()
         this.setState({ tables: [ ...tables] ,foods: [ ...foods ], foodcart: [], CartPrize: 0 })
+
+        if (localStorage.getItem("lastActiveTable") !== null) {
+            let lastActiveTable = JSON.parse(localStorage.getItem("lastActiveTable"));
+            console.log(lastActiveTable);
+
+            let tableOrder = "tableOrder-" + lastActiveTable
+            if (localStorage.getItem(tableOrder) !== null) {
+                let storedfoodcart = JSON.parse(localStorage.getItem(tableOrder));
+                let storedCartPrize = storedfoodcart.map(item => item.prize).reduce((a, b) => a + b, 0);
+                this.setState({
+                    tables: [...this.state.tables], foods: [...this.state.foods],
+                    foodcart: [...this.state.foodcart, ...storedfoodcart], CartPrize: storedCartPrize
+                })
+
+            }
+            document.getElementById("tableNumber").children[0].textContent = lastActiveTable
+            document.querySelector(".allTables").getElementsByTagName("li")[lastActiveTable-1].setAttribute("class", "active");
+            this.tableSelected = true
+        }
     }
 
     selectTable(tablePointer, selectedTable){
@@ -36,6 +55,9 @@ export class App {
         tablePointer.classList.add('active');
         this.tableSelected = true;
         document.getElementById("tableNumber").children[0].textContent = selectedTable
+        this.lastActiveTable = selectedTable
+        localStorage.setItem("lastActiveTable", JSON.stringify(this.lastActiveTable)); 
+
 
         this.setState( {  tables: [ ...this.state.tables] ,foods: [ ...this.state.foods],
             foodcart: [], CartPrize: 0})
@@ -57,14 +79,27 @@ export class App {
         let tableNo = document.getElementById("tableNumber").children[0].textContent
         let tableOrder = "tableOrder-"+tableNo
         let fooditem = {
-         id: +new Date(),
+            id: +new Date(),
         }
         fooditem.name = this.state.foods.find(obj => obj.id == foodID).name;
         fooditem.prize = this.state.foods.find(obj => obj.id == foodID).prize;
+        fooditem.foodID = foodID
+
         this.setState( {  tables: [ ...this.state.tables] ,foods: [ ...this.state.foods],
              foodcart: [ ...this.state.foodcart, fooditem ], CartPrize: app.setTotalPrize(fooditem.prize)})
 
-        localStorage.setItem(tableOrder, JSON.stringify(this.state.foodcart));     
+        localStorage.setItem(tableOrder, JSON.stringify(this.state.foodcart));  
+        
+        
+        if (localStorage.getItem(tableOrder) !== null) {
+        let similarOrder = JSON.parse(localStorage.getItem(tableOrder));
+        let a = similarOrder.map(obj => obj.name)
+        var b = a.filter(function(value){
+            return value === fooditem.name;
+        }).length 
+        console.log(fooditem.name, b+"times");
+        }
+        
     }
 
     setTotalPrize(totalprize){
@@ -85,6 +120,7 @@ export class App {
     }
 
     refresh(){
+
         if(this.tableSelected == false){
             document.getElementById("table").children[1].innerHTML = TablesList(this.state.tables)
         }
@@ -94,61 +130,56 @@ export class App {
     }    
 
     render() {
-        // let storedfoodcart = JSON.parse(localStorage.getItem("foodcart"));
-        // console.log(storedfoodcart);
-        // if(storedfoodcart.length > 0){
-        //     this.state.foodcart = storedfoodcart;
-        //     console.log(this.state.foodcart);
-        // }
-        this.rootElement.innerHTML = `
-		<h1>SnacksBar App</h1>
-		<hr>
-		<div class="row">
-			<div class="span4">
-				<div id="table" class="clearfix">
-                    <h2 id="tableHeading">Tables</h2>
-                     ${TablesList(this.state.tables)} 
-					
-				</div>
-			</div>
-			<div class="span8">
-				<div id="order">
 
-				<h2>Select a table on left</h2>
-				<div class="row">
-					<div class="span2">
-						<div id="menu">
-							
+        this.rootElement.innerHTML = `
+        <h1>SnacksBar App</h1>
+        <hr>
+        <div class="row">
+            <div class="span4">
+                <div id="table" class="clearfix">
+                    <h2 id="tableHeading">Tables</h2>
+                     <div>${TablesList(this.state.tables)} </div>
+                    
+                </div>
+            </div>
+            <div class="span8">
+                <div id="order">
+
+                <h2>Select a table on left</h2>
+                <div class="row">
+                    <div class="span2">
+                        <div id="menu">
+                            
                         
                             ${FoodList(this.state.foods)}
                         
-								
-						</div>						
-					</div>
-					<div class="span6">
-						<div id="details">
-							<h2 id="tableNumber">Table <span>0</span></h2>
-							<ul id="intro">
-								<li id="default">
-									<h3>Click a food to add it</h3>
-								</li>
-							</ul>
+                                
+                        </div>                      
+                    </div>
+                    <div class="span6">
+                        <div id="details">
+                            <h2 id="tableNumber">Table <span>0</span></h2>
+                            <ul id="intro">
+                                <li id="default">
+                                    <h3>Click a food to add it</h3>
+                                </li>
+                            </ul>
                             
                             <div>
-                            ${FoodCartList(this.state.foodcart)}	
+                            ${FoodCartList(this.state.foodcart)}    
                             </div>
 
-							<ul>
-								<li id="total">
-									<h3>Total <span>${this.state.CartPrize}</span></h3>
-								</li>
-							</ul> 
-						</div>
-					</div>
-				</div>
-				</div>
-			</div>
-		</div>`
+                            <ul>
+                                <li id="total">
+                                    <h3>Total <span>${this.state.CartPrize}</span></h3>
+                                </li>
+                            </ul> 
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>`
       }
 
 }

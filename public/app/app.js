@@ -72,34 +72,47 @@ export class App {
     }
     
     addFood(foodID){
-        if(this.tableSelected == false){
+        if (this.tableSelected == false) {
             alert("Select a table first!!");
             return;
         }
         let tableNo = document.getElementById("tableNumber").children[0].textContent
-        let tableOrder = "tableOrder-"+tableNo
-        let fooditem = {
-            id: +new Date(),
-        }
-        fooditem.name = this.state.foods.find(obj => obj.id == foodID).name;
-        fooditem.prize = this.state.foods.find(obj => obj.id == foodID).prize;
-        fooditem.foodID = foodID
+        let tableOrder = "tableOrder-" + tableNo
 
-        this.setState( {  tables: [ ...this.state.tables] ,foods: [ ...this.state.foods],
-             foodcart: [ ...this.state.foodcart, fooditem ], CartPrize: app.setTotalPrize(fooditem.prize)})
+        let tableOrderID = this.state.foodcart.map(obj => obj.id)
+        let alreadyIncart = tableOrderID.includes(foodID);
+        var result = this.state.foodcart.filter(obj => {
+            return obj.id === foodID
+        })
 
-        localStorage.setItem(tableOrder, JSON.stringify(this.state.foodcart));  
-        
-        
-        if (localStorage.getItem(tableOrder) !== null) {
-        let similarOrder = JSON.parse(localStorage.getItem(tableOrder));
-        let a = similarOrder.map(obj => obj.name)
-        var b = a.filter(function(value){
-            return value === fooditem.name;
-        }).length 
-        console.log(fooditem.name, b+"times");
+        if (alreadyIncart){
+
+            result[0].addedTimes += 1 
+            result[0].prize = result[0].addedTimes * this.state.foods.find(obj => obj.id == foodID).prize;
+            let TotalCartPrize = this.state.foodcart.map(item => item.prize).reduce((a, b) => a + b, 0);
+
+            this.setState({
+                tables: [...this.state.tables], foods: [...this.state.foods],
+                foodcart: [...this.state.foodcart], CartPrize: TotalCartPrize
+            })
+
+
+        }else{
+            let fooditem = {
+                id: foodID,
+            }
+            fooditem.name = this.state.foods.find(obj => obj.id == foodID).name;
+            fooditem.addedTimes = 1,
+            fooditem.prize = fooditem.addedTimes * this.state.foods.find(obj => obj.id == foodID).prize;
+            
+            this.setState({
+                tables: [...this.state.tables], foods: [...this.state.foods],
+                foodcart: [...this.state.foodcart, fooditem], CartPrize: app.setTotalPrize(fooditem.prize)
+            })
+
         }
-        
+
+        localStorage.setItem(tableOrder, JSON.stringify(this.state.foodcart));      
     }
 
     setTotalPrize(totalprize){
@@ -107,12 +120,26 @@ export class App {
         return totalprize;
     }
 
-    deleteFoodFromList(idToDelete){
-        let newfoodCartPrize =  this.state.CartPrize - this.state.foodcart.find(obj => obj.id == idToDelete).prize;
-        let newfoodCart = this.state.foodcart.filter( e => e.id !== parseInt(idToDelete))
+    deleteFoodFromList(idToDelete, addedTimes){
 
-        
-        this.setState({ tables: [ ...this.state.tables] ,foods: [ ...this.state.foods ], foodcart: [...newfoodCart], CartPrize: newfoodCartPrize })
+        if(addedTimes > 1){
+            var result = this.state.foodcart.filter(obj => {
+                return obj.id === idToDelete
+            })
+            result[0].addedTimes -= 1 
+            result[0].prize = this.state.foodcart.find(obj => obj.id == idToDelete).prize - (this.state.foodcart.find(obj => obj.id == idToDelete).prize / addedTimes) ;
+            let TotalCartPrize = this.state.foodcart.map(item => item.prize).reduce((a, b) => a + b, 0)
+
+            this.setState({
+                tables: [...this.state.tables], foods: [...this.state.foods],
+                foodcart: [...this.state.foodcart], CartPrize: TotalCartPrize
+            })
+        }else{
+            let newfoodCartPrize =  this.state.CartPrize - this.state.foodcart.find(obj => obj.id == idToDelete).prize;
+            let newfoodCart = this.state.foodcart.filter( e => e.id !== parseInt(idToDelete))
+
+            this.setState({ tables: [ ...this.state.tables] ,foods: [ ...this.state.foods ], foodcart: [...newfoodCart], CartPrize: newfoodCartPrize })
+        }
         let tableOrder = "tableOrder-"+document.getElementById("tableNumber").children[0].textContent
         if (localStorage.getItem(tableOrder) !== null) {
             localStorage.setItem(tableOrder, JSON.stringify(this.state.foodcart)); 
